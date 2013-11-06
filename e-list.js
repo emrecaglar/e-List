@@ -435,6 +435,18 @@ String.prototype.Equals = function (str) {
         return false;
 }
 
+String.Format = function (args) {
+    args = String.Format.arguments;
+    var index = 1;
+    var exp = args[0].replace(/{\d+}/g, function (match, number) {
+        var result = typeof args[index] != 'undefined' ? args[index] : match;
+        index++
+        return result;
+    })
+
+    return exp;
+}
+
 Number.prototype.Equals = function (number) {
     if (this.valueOf() === number)
         return true;
