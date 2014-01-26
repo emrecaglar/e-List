@@ -1,16 +1,19 @@
-﻿var List = function (list) {
+﻿var List = function (items) {
     var arr = [];
 
-    if (list) {
-        if (list instanceof Array) {
-            for (var i = 0; i < list.length; i++) {
-                arr.push(list[i]);
+    if (items) {
+        if (items instanceof Array) {
+            var itemsLen = items.length;
+
+            for (var i = 0; i < itemsLen; i++) {
+                arr.push(items[i]);
             }
         }
-        else if (list instanceof List) {
+        else if (items instanceof List) {
             var _tmpArray = list.ToArray();
+            var tmpArrayLen = _tmpArray.length;
 
-            for (var i = 0; i < _tmpArray.length; i++) {
+            for (var i = 0; i < tmpArrayLen; i++) {
                 arr.push(_tmpArray[i]);
             }
         }
@@ -178,30 +181,27 @@
         arr.push(obj);
     }
 
-    var _addRange = function (array) {
-        for (var i = 0; i < array.length; i++) {
-            _add(array[i]);
+    var _addRange = function (arr) {
+        var arrLen = arr.length;
+        for (var i = 0; i < arrLen; i++) {
+            _add(arr[i]);
         }
     }
 
     var _remove = function (obj) {
-        _foreach(function (s) {
-            if (s == obj) {
-                delete s;
+        var objIndex = _indexof(obj);
 
-                return Loop.Break;
-            }
-        });
+        if(objIndex!=-1){
+            _removeAt(objIndex);
+        }
     }
 
     var _removeAll = function () {
-        _foreach(function (s) {
-            _remove(s);
-        });
+        arr.splice(0,arr.length);
     }
 
     var _removeAt = function (index) {
-        delete arr[index];
+        arr.splice(index,1);
     }
 
     var _copyTo = function () {
