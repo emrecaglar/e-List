@@ -19,6 +19,104 @@
         }
     }
 
+    var Utils = {
+        equalTo: function (o1, o2) {
+            var equality = function (v1, v2) {
+                return s1 == s2;
+            }
+
+            var objectEquality = function (obj1, obj2) {
+                for (var prop in obj1) {
+                    if (typeof obj1[prop] == Types.Object) {
+                        objectComperer(obj1[prop], obj2[prop]);
+                    } else {
+                        if (obj1[prop] != obj2[prop]) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            if (typeof o1 == Types.Object) return objectEquality(o1, o2);
+
+            return equality(o1, o2);
+        },
+        compareTo: function (o1, o2) {
+            var stringComparer = function (s1, s2) {
+                var val1 = s1;
+                var val2 = s2;
+
+                for (var i = 0; i < this.length; i++) {
+                    val1 += val1[i].charCodeAt();
+                }
+
+                for (var i = 0; i < str.length; i++) {
+                    val2 += str[i].charCodeAt();
+                }
+
+                if (val1 > val2)
+                    return 1;
+                else if (val1 < val2)
+                    return -1;
+                else
+                    return 0;
+            }
+
+            var numericComparer = function (n1, n2) {
+                var val1 = n1.valueOf();
+                var val2 = n2;
+
+                if (val1 > val2)
+                    return 1;
+                else if (val1 < val2)
+                    return -1;
+                else
+                    return 0;
+            }
+
+            var objectComperer = function (obj1, obj2) {
+                for (var prop in obj1) {
+                    if (typeof obj1[prop] == Types.Object) {
+                        objectComperer(obj1[prop], obj2[prop]);
+                    } else {
+                        if (obj1[prop] != obj2[prop]) {
+                            return 0;
+                        }
+                    }
+                }
+            }
+
+            var boolComperer = function (b1, b2) {
+                var val1 = b1.valueOf();
+                var val2 = b2;
+
+                if (val1 && !val2)
+                    return 1;
+                else if (!val1 < val2)
+                    return -1;
+                else
+                    return 0;
+            }
+
+            if (typeof o1 == Types.String) return stringComparer(o1, o2);
+            if (typeof o1 == Types.Number) return numericComparer(o1, o2);
+            if (typeof o1 == Types.Boolean) return boolComparer(o1, o2);
+        },
+        formatString: function () {
+            args = arguments;
+            var index = 1;
+            var exp = args[0].replace(/{\d+}/g, function (match, number) {
+                var result = typeof args[index] != 'undefined' ? args[index] : match;
+                index++
+                return result;
+            })
+
+            return exp;
+        }
+    }
+
     var Types = {
         String: typeof "",
         Boolean: typeof false,
@@ -153,7 +251,7 @@
         var index = -1;
 
         _foreach(function (s, idx) {
-            if (s.Equals(obj)) {
+            if (Utils.equalTo(s, obj)) {
                 index = idx;
 
                 return Loop.Break;
@@ -167,7 +265,7 @@
         var result = false;
 
         _foreach(function (s) {
-            if (s.Equals(obj)) {
+            if (Utils.equalTo(s, obj)) {
                 result = true;
 
                 return Loop.Break;
@@ -191,17 +289,17 @@
     var _remove = function (obj) {
         var objIndex = _indexof(obj);
 
-        if(objIndex!=-1){
+        if (objIndex != -1) {
             _removeAt(objIndex);
         }
     }
 
     var _removeAll = function () {
-        arr.splice(0,arr.length);
+        arr.splice(0, arr.length);
     }
 
     var _removeAt = function (index) {
-        arr.splice(index,1);
+        arr.splice(index, 1);
     }
 
     var _copyTo = function () {
@@ -212,7 +310,7 @@
         var clonedArray = [];
 
         _foreach(function (s) {
-            clonedArray.push(s.Clone());
+            clonedArray.push(JSON.parse(JSON.stringify(s)));
         });
 
         return new List(clonedArray);
@@ -243,7 +341,7 @@
         for (var i = 0; i < arr.length; i++) {
             for (var o = 0; o < _inner.length ; o++) {
                 try {
-                    if (_outerKey(arr[i]).Equals(_innerKey(_inner[o]))) {
+                    if (Utils.equalTo(_outerKey(arr[i]), (_innerKey(_inner[o])))) {
                         lst.Add(_resultSelector(arr[i], _inner[o]));
                     }
                 } catch (e) {
@@ -281,7 +379,7 @@
             var key = distinctElements[i];
             var elements = _where(function (s) { return s[colName] == distinctElements[i]; });
 
-            grouppedArray.push(new Grouping(key, elements));
+            grouppedArray.push({ groupKey: key, items: elements });
         }
 
         return grouppedArray;
@@ -357,27 +455,26 @@
 
             if (typeof direction == Types.Undefined) {
                 arr.sort(function (a1, a2) {
-                    return a1[propName].CompareTo(a2[propName]);
+                    return Utils.compareTo(a1[propName], a2[propName]);
                 });
             }
             else {
                 if (direction == "asc") {
                     arr.sort(function (a1, a2) {
-                        return a1[propName].CompareTo(a2[propName]);
+                        return Utils.compareTo(a1[propName], a2[propName]);
                     });
                 }
                 else if (direction == "desc") {
                     arr.sort(function (a1, a2) {
-                        return a2[propName].CompareTo(a1[propName]);
+                        return Utils.compareTo(a1[propName], a2[propName]);
                     });
                 }
             }
         }
-        else if (typeof predicate === Types.Undefined) {
+        else
             arr.sort(function (a1, a2) {
-                return a1.CompareTo(a2);
+                return Utils.compareTo(a1, a2);
             });
-        }
     }
 
     var _reverse = function () {
@@ -385,167 +482,33 @@
     }
 
     return {
-        Action: _action,
-        Add: _add,
-        AddRange: _addRange,
-        Any: _any,
-        All: _all,
-        Clone: _clone,
-        CopyTo: _copyTo,
-        Count: _count,
-        Contains: _contains,
-        Distinct: _distinct,
-        ElementAt: _elementAt,
-        First: _first,
-        FirstOrDefault: _firstOrDefault,
-        ForEach: _foreach,
-        GroupBy: _groupBy,
-        IndexOf: _indexof,
-        Join: _join,
-        Remove: _remove,
-        RemoveAt: _removeAt,
-        RemoveAll: _removeAll,
-        Reverse: _reverse,
-        Select: _select,
-        Skip: _skip,
-        Sum: _sum,
-        Sort: _sort,
-        Take: _take,
-        ToArray: _toArray,
-        Where: _where
+        action: _action,
+        add: _add,
+        addRange: _addRange,
+        any: _any,
+        all: _all,
+        clone: _clone,
+        copyTo: _copyTo,
+        count: _count,
+        contains: _contains,
+        distinct: _distinct,
+        elementAt: _elementAt,
+        first: _first,
+        firstOrDefault: _firstOrDefault,
+        forEach: _foreach,
+        groupBy: _groupBy,
+        indexOf: _indexof,
+        join: _join,
+        remove: _remove,
+        removeAt: _removeAt,
+        removeAll: _removeAll,
+        reverse: _reverse,
+        select: _select,
+        skip: _skip,
+        sum: _sum,
+        sort: _sort,
+        take: _take,
+        toArray: _toArray,
+        where: _where
     };
 }
-
-var Grouping = function (key, elements) {
-    this.Key = key,
-    this.Elements = elements
-}
-
-Boolean.prototype.Equals = function (value) {
-    if (this.valueOf() === value)
-        return true
-    else
-        return false;
-}
-
-String.prototype.Equals = function (str) {
-    if (this.valueOf() === str)
-        return true
-    else
-        return false;
-}
-
-String.Format = function (args) {
-    args = String.Format.arguments;
-    var index = 1;
-    var exp = args[0].replace(/{\d+}/g, function (match, number) {
-        var result = typeof args[index] != 'undefined' ? args[index] : match;
-        index++
-        return result;
-    })
-
-    return exp;
-}
-
-Number.prototype.Equals = function (number) {
-    if (this.valueOf() === number)
-        return true;
-    else
-        return false;
-}
-
-Object.prototype.Equals = function (obj) {
-    for (var i in this) {
-        if (this[i].valueOf() !== obj[i].valueOf()) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-Object.prototype.Clone = function () {
-    var clonedObject = {};
-
-    if (typeof this.valueOf() === "object") {
-        for (var i in this) {
-            clonedObject[i] = this[i].valueOf();
-        }
-    }
-    else {
-        clonedObject = this.valueOf();
-    }
-
-    return clonedObject;
-}
-
-Object.prototype.HasFunc = function (funcName) {
-    if (typeof this[funcName] === undefined) {
-        return false;
-    }
-    else {
-        return true;
-    }
-}
-
-String.prototype.CompareTo = function (str) {
-    var val1 = this;
-    var val2 = str;
-
-    for (var i = 0; i < this.length; i++) {
-        val1 += val1[i].charCodeAt();
-    }
-
-    for (var i = 0; i < str.length; i++) {
-        val2 += str[i].charCodeAt();
-    }
-
-    if (val1 > val2)
-        return 1;
-    else if (val1 < val2)
-        return -1;
-    else
-        return 0;
-}
-
-Number.prototype.CompareTo = function (nm) {
-    var val1 = this.valueOf();
-    var val2 = nm;
-
-    if (val1 > val2)
-        return 1;
-    else if (val1 < val2)
-        return -1;
-    else
-        return 0;
-}
-
-Boolean.prototype.CompareTo = function (bool) {
-    var val1 = this.valueOf();
-    var val2 = bool;
-
-    if (val1 && !val2)
-        return 1;
-    else if (!val1 < val2)
-        return -1;
-    else
-        return 0;
-}
-
-Object.prototype.CompareTo = function (obj) {
-    if (typeof obj.valueOf() === "string" ||
-        typeof obj.valueOf() === "number" ||
-        typeof obj.valueOf() === "boolean") {
-
-        return this.CompareTo(obj);
-    }
-    else if (typeof obj.valueOf() === "object") {
-        if (this.hasOwnProperty("CompareTo")) {
-            return this.CompareTo(obj);
-        }
-        else {
-            return 0;
-        }
-    }
-}
-
